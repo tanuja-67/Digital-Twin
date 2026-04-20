@@ -26,16 +26,33 @@ export function fetchLatestAqi(stationName) {
   return request(`/api/air-quality/latest?${q}`);
 }
 
-export function simulateIntervention(stationName, intervention) {
+export function simulateIntervention(stationName, interventions = []) {
   return request("/api/air-quality/intervention", {
     method: "POST",
-    body: JSON.stringify({ station_name: stationName, intervention }),
+    body: JSON.stringify({ station_name: stationName, interventions }),
   });
 }
 
 export function fetchReadings(stationName) {
   const q = new URLSearchParams({ station_name: stationName });
   return request(`/api/air-quality/air-quality?${q}`);
+}
+
+export function fetchZoneSummary() {
+  return request("/api/air-quality/zones");
+}
+
+export function fetchZonePollutants() {
+  return request("/api/air-quality/zones-pollutants");
+}
+
+export function fetchMonthlyTrend() {
+  return request("/api/air-quality/monthly-trend");
+}
+
+export function fetchStationTrend(stationName) {
+  const q = new URLSearchParams({ station_name: stationName });
+  return request(`/api/air-quality/station-trend?${q}`);
 }
 
 export function fetchTwinProjection(stationName, minutesAhead = 60) {
