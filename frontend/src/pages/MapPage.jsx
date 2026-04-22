@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CircleMarker, MapContainer, Popup, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { fetchLatestAqi, fetchStations, simulateIntervention } from "../services/api.js";
+import { fetchLiveData, simulateIntervention } from "../services/api.js";
 
 const INTERVENTIONS = [
   { key: "industrialScrubbers", label: "Industrial Scrubbers" },
@@ -30,18 +30,12 @@ function formatNum(value) {
   return value == null ? "N/A" : Number(value).toFixed(1);
 }
 
-function normalizeStationName(name) {
+function normalizeAreaName(name) {
   const raw = String(name || "").trim().toLowerCase();
   if (raw === "ecil" || raw === "ecil kapra") {
     return "ECIL Kapra";
   }
   return String(name || "").trim();
-}
-
-function getDateKey(isoDate) {
-  if (!isoDate) return null;
-  const text = String(isoDate);
-  return text.length >= 10 ? text.slice(0, 10) : null;
 }
 
 export function MapPage() {
@@ -53,7 +47,6 @@ export function MapPage() {
   const [selectedInterventions, setSelectedInterventions] = useState({});
   const [simulationResults, setSimulationResults] = useState({});
   const [simulationLoading, setSimulationLoading] = useState({});
-  const [mapDate, setMapDate] = useState(null);
   const [activePanelTab, setActivePanelTab] = useState("info");
 
   useEffect(() => {
@@ -63,77 +56,30 @@ export function MapPage() {
       try {
         setLoading(true);
         setError(null);
-        const stationRows = await fetchStations();
-        const withAqiRaw = await Promise.all(
-          stationRows.map(async (station) => {
-            try {
-              const latest = await fetchLatestAqi(station.name);
-              return { ...station, latest, final_aqi: latest?.final_aqi ?? null };
-            } catch {
-              return { ...station, latest: null, final_aqi: null };
-            }
-          })
-        );
-
-        const known = withAqiRaw.filter((s) => s.latest && s.latest.final_aqi != null);
-        const zoneAgg = known.reduce((acc, s) => {
-          const zone = String(s.zone || "Unknown");
-          if (!acc[zone]) acc[zone] = { sum: 0, count: 0 };
-          acc[zone].sum += Number(s.latest.final_aqi || 0);
-          acc[zone].count += 1;
-          return acc;
-        }, {});
-        const globalAverage = known.length > 0
-          ? known.reduce((sum, s) => sum + Number(s.latest.final_aqi || 0), 0) / known.length
-          : null;
-        const mostRecentKnownDate = known
-          .map((s) => s.latest?.date)
-          .filter(Boolean)
-          .sort()
-          .at(-1) || null;
-
-        const withAqi = withAqiRaw.map((station) => {
-          if (station.latest && station.latest.final_aqi != null) {
-            return station;
-          }
-
-          const zone = String(station.zone || "Unknown");
-          const zoneAverage = zoneAgg[zone] && zoneAgg[zone].count > 0
-            ? zoneAgg[zone].sum / zoneAgg[zone].count
-            : null;
-          const estimatedAqi = zoneAverage ?? globalAverage;
-
-          if (estimatedAqi == null) {
-            return station;
-          }
-
+        const liveRows = await fetchLiveData(false);
+        const withAqi = (Array.isArray(liveRows) ? liveRows : []).map((row) => {
+          const pollutants = row.pollutants || {};
           return {
-            ...station,
+            name: row.area,
+            city: row.city || "Hyderabad",
+            latitude: Number(row.latitude),
+            longitude: Number(row.longitude),
             latest: {
-              date: mostRecentKnownDate,
-              final_aqi: Number(estimatedAqi.toFixed(2)),
-              pm25: null,
-              pm10: null,
-              no2: null,
-              so2: null,
-              co: null,
-              o3: null,
+              date: row.timestamp,
+              final_aqi: Number(row.aqi ?? 0),
+              pm25: Number(pollutants.pm25 ?? 0),
+              pm10: Number(pollutants.pm10 ?? 0),
+              no2: Number(pollutants.no2 ?? 0),
+              so2: Number(pollutants.so2 ?? 0),
+              co: Number(pollutants.co ?? 0),
+              o3: Number(pollutants.o3 ?? 0),
             },
-            final_aqi: Number(estimatedAqi.toFixed(2)),
-            isEstimated: true,
+            final_aqi: Number(row.aqi ?? 0),
           };
         });
 
         if (!mounted) return;
         setStations(withAqi);
-        const dateFrequency = withAqi.reduce((acc, station) => {
-          const dateKey = getDateKey(station.latest?.date);
-          if (!dateKey) return acc;
-          acc[dateKey] = (acc[dateKey] || 0) + 1;
-          return acc;
-        }, {});
-        const rankedDates = Object.entries(dateFrequency).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-        setMapDate(rankedDates.length > 0 ? rankedDates[0][0] : null);
         if (withAqi.length > 0) setSelectedStationName(withAqi[0].name);
       } catch (e) {
         if (mounted) setError(e.message || "Failed to load map data");
@@ -154,11 +100,7 @@ export function MapPage() {
   const getInterventions = (stationName) => selectedInterventions[stationName] || [];
 
   const stats = useMemo(() => {
-    const valid = stations.filter((s) => {
-      if (!s.latest || s.latest.final_aqi == null) return false;
-      if (!mapDate) return true;
-      return getDateKey(s.latest.date) === mapDate;
-    });
+    const valid = stations.filter((s) => s.latest && s.latest.final_aqi != null);
     if (valid.length === 0) {
       return {
         avgAqi: null,
@@ -172,7 +114,7 @@ export function MapPage() {
     }
 
     const grouped = valid.reduce((acc, station) => {
-      const key = normalizeStationName(station.name);
+      const key = normalizeAreaName(station.name);
       if (!acc[key]) {
         acc[key] = {
           name: key,
@@ -208,7 +150,7 @@ export function MapPage() {
     const poorCount = normalizedStations.length - goodCount;
 
     return { avgAqi, high, low, avgPm25, avgPm10, goodCount, poorCount };
-  }, [stations, mapDate]);
+  }, [stations]);
 
   const onSimulate = async (stationName) => {
     const interventions = getInterventions(stationName);
@@ -225,6 +167,13 @@ export function MapPage() {
       setSimulationLoading((prev) => ({ ...prev, [stationName]: false }));
     }
   };
+
+  useEffect(() => {
+    if (!selectedStationName) return;
+    if (simulationResults[selectedStationName]) return;
+    if (simulationLoading[selectedStationName]) return;
+    onSimulate(selectedStationName);
+  }, [selectedStationName, simulationResults, simulationLoading]);
 
   const panelResult = selectedStation ? simulationResults[selectedStation.name] : null;
   const panelLoading = selectedStation ? simulationLoading[selectedStation.name] : false;
@@ -244,7 +193,7 @@ export function MapPage() {
       <h2 style={{ fontSize: "1.1rem", margin: 0, color: "#ffffff" }}>AQI Analytics Dashboard</h2>
       {loading && (
         <Panel>
-          <div style={{ color: "#c4d5e8" }}>Loading station telemetry...</div>
+          <div style={{ color: "#c4d5e8" }}>Loading live AQI telemetry...</div>
         </Panel>
       )}
       {error && (
@@ -289,7 +238,7 @@ export function MapPage() {
         <StatCard
           label="Station Status"
           value={`${stats.goodCount} / ${stats.poorCount}`}
-          sub="Good / Poor"
+          sub="Good / Poor Areas"
           category={stats.poorCount > stats.goodCount ? "Poor" : "Good"}
           color={stats.poorCount > stats.goodCount ? "#ff1744" : "#00e676"}
         />
@@ -326,7 +275,7 @@ export function MapPage() {
                     <Popup>
                       <div style={{ minWidth: 235, color: "#0f172a", display: "grid", gap: "8px" }}>
                         <div style={{ fontSize: "1rem", fontWeight: 700 }}>{station.name}</div>
-                        <div style={{ fontSize: "0.86rem" }}>Zone: {station.zone || "N/A"}</div>
+                        <div style={{ fontSize: "0.86rem" }}>City: {station.city || "N/A"}</div>
                         <div style={{ fontSize: "1.1rem", fontWeight: 800, color: getAqiColor(station.final_aqi) }}>
                           AQI {formatNum(station.final_aqi)}
                         </div>
@@ -379,7 +328,7 @@ export function MapPage() {
         </Panel>
 
         <Panel style={{ flex: 1, minHeight: 0, overflowY: "auto", alignContent: "start" }}>
-          <h3 style={{ margin: 0, fontSize: "1.05rem", color: "#ffffff" }}>Smart Station Panel</h3>
+          <h3 style={{ margin: 0, fontSize: "1.05rem", color: "#ffffff" }}>Smart Live Area Panel</h3>
           <div style={{ display: "flex", gap: 8 }}>
             {[
               { key: "info", label: "Info" },
@@ -413,7 +362,7 @@ export function MapPage() {
                   <div style={{ display: "grid", gap: "8px" }}>
                     <div style={{ fontSize: "1rem", fontWeight: 700 }}>{selectedStation.name}</div>
                     <div style={{ color: "#b6c9df", fontSize: "0.9rem" }}>
-                      Zone: {selectedStation.zone || "N/A"}
+                      City: {selectedStation.city || "N/A"}
                     </div>
                     <div style={{ fontSize: "1.5rem", fontWeight: 800, color: getAqiColor(selectedStation.final_aqi) }}>
                       {formatNum(selectedStation.final_aqi)} AQI
@@ -425,12 +374,14 @@ export function MapPage() {
                       {(panelResult?.recommended || []).length > 0 ? (
                         (panelResult.recommended || []).map((item, idx) => (
                           <li key={`${item.name}-${idx}`} style={{ fontSize: "0.88rem" }}>
-                            {item.name} (AQI: {formatNum(item.predicted_aqi)})
+                            {item.name}
                           </li>
                         ))
                       ) : (
                         <li style={{ fontSize: "0.88rem" }}>
-                          Run simulation to get smart intervention suggestions.
+                          {panelLoading
+                            ? "Loading smart intervention suggestions..."
+                            : "No recommendations available for this area right now."}
                         </li>
                       )}
                     </ul>

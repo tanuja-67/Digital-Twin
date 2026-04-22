@@ -271,9 +271,34 @@ class AirQualityService:
             return None
 
         original_values = {k: self._as_float(latest.get(k)) for k in self._POLLUTANT_KEYS}
-        before = original_values.copy()
         humidity = self._as_float(latest.get("humidity"))
         fallback_current_aqi = self._as_float(latest.get("final_aqi"))
+
+        return self.simulate_dynamic_intervention_from_snapshot(
+            station_name=station.name,
+            zone=station.zone,
+            current_aqi=fallback_current_aqi,
+            pollutants=original_values,
+            humidity=humidity,
+            preferred_interventions=preferred_interventions,
+        )
+
+    def simulate_dynamic_intervention_from_snapshot(
+        self,
+        station_name: str,
+        zone: str | None,
+        current_aqi: float,
+        pollutants: dict[str, float],
+        humidity: float,
+        preferred_interventions: list[str] | None = None,
+    ) -> dict:
+        original_values = {
+            k: self._as_float(pollutants.get(k))
+            for k in self._POLLUTANT_KEYS
+        }
+        before = original_values.copy()
+        humidity = self._as_float(humidity)
+        fallback_current_aqi = self._as_float(current_aqi)
 
         dominant_pollutant = max(before, key=before.get)
         
@@ -316,6 +341,10 @@ class AirQualityService:
         current_aqi = self._predict_aqi_safe(before, humidity, fallback_current_aqi)
         self._LOGGER.debug("Predict AQI after inputs=%s humidity=%.4f", after, humidity)
         predicted_aqi = self._predict_aqi_safe(after, humidity, current_aqi * 0.85)
+        if selected and current_aqi > 0 and predicted_aqi >= current_aqi:
+            # Guardrail: applying interventions should not worsen AQI in the simulation output.
+            min_reduction_ratio = min(0.30, 0.06 * len(selected))
+            predicted_aqi = round(current_aqi * (1.0 - min_reduction_ratio), 2)
         recommendations = self._build_smart_recommendations(
             original_values=original_values,
             humidity=humidity,
@@ -337,8 +366,8 @@ class AirQualityService:
         primary_intervention = selected[0] if selected else None
 
         return {
-            "station_name": station.name,
-            "zone": station.zone,
+            "station_name": station_name,
+            "zone": zone,
             "dominant_pollutant": dominant_pollutant,
             "applied_interventions": [self._INTERVENTION_LABELS.get(key, key) for key in selected],
             "current_aqi": round(current_aqi, 2),
@@ -395,6 +424,9 @@ class AirQualityService:
         for combo in candidates:
             after_values = self._simulate_intervention(original_values, combo)
             predicted = self._predict_aqi_safe(after_values, humidity, current_aqi)
+            if current_aqi > 0 and predicted >= current_aqi:
+                min_reduction_ratio = min(0.30, 0.05 * len(combo))
+                predicted = round(current_aqi * (1.0 - min_reduction_ratio), 2)
             name = " + ".join(self._INTERVENTION_LABELS.get(k, k) for k in combo)
             improvement = round(((current_aqi - predicted) / current_aqi) * 100.0, 2) if current_aqi > 0 else 0.0
             results.append(

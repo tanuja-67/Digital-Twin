@@ -8,7 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { fetchStations, simulateIntervention } from "../services/api.js";
+import { fetchLiveData, simulateIntervention } from "../services/api.js";
 
 const INTERVENTION_OPTIONS = [
   { key: "industrialScrubbers", label: "Industrial Scrubbers" },
@@ -39,7 +39,7 @@ function Card({ children, style }) {
 }
 
 export function InterventionPage() {
-  const [stations, setStations] = useState([]);
+  const [areas, setAreas] = useState([]);
   const [stationName, setStationName] = useState("");
   const [selectedInterventions, setSelectedInterventions] = useState([]);
   const [result, setResult] = useState(null);
@@ -54,11 +54,15 @@ export function InterventionPage() {
       try {
         setLoadingStations(true);
         setError(null);
-        const stationsData = await fetchStations();
+        const liveRows = await fetchLiveData(false);
+        const areasData = (Array.isArray(liveRows) ? liveRows : []).map((row) => ({
+          name: row.area,
+          city: row.city || "Hyderabad",
+        }));
         if (!mounted) return;
-        setStations(Array.isArray(stationsData) ? stationsData : []);
-        if ((stationsData || []).length > 0) {
-          setStationName(stationsData[0].name);
+        setAreas(areasData);
+        if (areasData.length > 0) {
+          setStationName(areasData[0].name);
         }
       } catch (e) {
         if (mounted) setError(e.message || "Failed to load simulation data");
@@ -106,25 +110,25 @@ export function InterventionPage() {
       <Card>
         <div style={{ display: "grid", gap: "10px" }}>
           <h2 style={{ margin: 0, color: "#f5fbff", fontSize: "1.15rem" }}>
-            Zone AQI Simulation Lab
+            Live Area AQI Simulation Lab
           </h2>
           <p style={{ margin: 0, color: "#a9c6e3", fontSize: "0.9rem" }}>
-            Select one station, choose multiple interventions, and run data-driven AQI simulation.
+            Select one live area, choose multiple interventions, and run simulation from latest live AQI.
           </p>
         </div>
       </Card>
 
-      {loadingStations && <div style={{ color: "#b9d2ea" }}>Loading stations and zones...</div>}
+      {loadingStations && <div style={{ color: "#b9d2ea" }}>Loading live areas...</div>}
       {error && <div style={{ color: "#ff9e9e" }}>{error}</div>}
 
       <Card>
         <div style={{ display: "grid", gap: "12px" }}>
           <div style={{ display: "grid", gap: "6px" }}>
-            <label style={{ color: "#d9ebff", fontWeight: 600 }}>Station</label>
+            <label style={{ color: "#d9ebff", fontWeight: 600 }}>Live Area</label>
             <select
               value={stationName}
               onChange={(e) => setStationName(e.target.value)}
-              disabled={loadingStations || stations.length === 0}
+              disabled={loadingStations || areas.length === 0}
               style={{
                 background: "#0b1d31",
                 color: "#f4faff",
@@ -134,9 +138,9 @@ export function InterventionPage() {
                 maxWidth: 320,
               }}
             >
-              {stations.map((s) => (
+              {areas.map((s) => (
                 <option key={s.name} value={s.name}>
-                  {s.name}
+                  {s.name}{s.city ? ` (${s.city})` : ""}
                 </option>
               ))}
             </select>
@@ -197,11 +201,11 @@ export function InterventionPage() {
         <>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px" }}>
             <Card>
-              <div style={{ color: "#a6c4e2", fontSize: "0.82rem" }}>Station</div>
+              <div style={{ color: "#a6c4e2", fontSize: "0.82rem" }}>Area</div>
               <div style={{ color: "#f5fbff", fontSize: "1.1rem", fontWeight: 700 }}>{result.station_name}</div>
             </Card>
             <Card>
-              <div style={{ color: "#a6c4e2", fontSize: "0.82rem" }}>Zone</div>
+              <div style={{ color: "#a6c4e2", fontSize: "0.82rem" }}>City / Zone</div>
               <div style={{ color: "#f5fbff", fontSize: "1.1rem", fontWeight: 700 }}>{result.zone || "N/A"}</div>
             </Card>
             <Card>
