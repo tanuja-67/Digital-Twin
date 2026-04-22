@@ -20,7 +20,8 @@ export function Layout({ children }) {
           Live readings and twin projections from the API
         </p>
         <nav style={{ marginTop: "0.8rem", display: "flex", gap: "0.65rem", fontSize: "0.9rem" }}>
-          <Link style={navLinkStyle} to="/">Analysis</Link>
+          <Link style={navLinkStyle} to="/">Live Data</Link>
+          <Link style={navLinkStyle} to="/station-trend">Trends</Link>
           <Link style={navLinkStyle} to="/map">Map</Link>
           <Link style={navLinkStyle} to="/intervention">Intervention</Link>
         </nav>

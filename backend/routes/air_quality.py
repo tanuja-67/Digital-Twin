@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 
 from services.air_quality_service import AirQualityService
+from services.live_data_service import live_data_service
 
 air_quality_bp = Blueprint("air_quality", __name__)
 _service = AirQualityService()
@@ -104,22 +105,50 @@ def intervention_simulation():
     if not station_name:
         return jsonify({"error": "station_name is required"}), 400
 
-    station = _get_station_details(station_name)
-    if not station:
-        return jsonify({"error": "station not found"}), 404
-
     preferred = []
     if isinstance(body.get("interventions"), list):
         preferred = [str(x) for x in body.get("interventions", [])]
     elif body.get("intervention"):
         preferred = [str(body.get("intervention"))]
 
-    result = _service.simulate_dynamic_intervention(
-        station_name=station_name,
+    station = _get_station_details(station_name)
+    if station:
+        result = _service.simulate_dynamic_intervention(
+            station_name=station_name,
+            preferred_interventions=preferred,
+        )
+        if result:
+            return (
+                jsonify(result),
+                200,
+            )
+
+    # Fallback to latest live snapshot by area name.
+    live_rows = live_data_service.get_latest_all_areas()
+    needle = station_name.strip().lower()
+    live_row = next(
+        (row for row in live_rows if str(row.get("area", "")).strip().lower() == needle),
+        None,
+    )
+    if not live_row:
+        return jsonify({"error": "station/area not found"}), 404
+
+    pollutants = live_row.get("pollutants") or {}
+    result = _service.simulate_dynamic_intervention_from_snapshot(
+        station_name=str(live_row.get("area") or station_name),
+        zone=str(live_row.get("city") or "Live Area"),
+        current_aqi=float(live_row.get("aqi") or 0.0),
+        pollutants={
+            "pm25": float(pollutants.get("pm25") or 0.0),
+            "pm10": float(pollutants.get("pm10") or 0.0),
+            "no2": float(pollutants.get("no2") or 0.0),
+            "so2": float(pollutants.get("so2") or 0.0),
+            "co": float(pollutants.get("co") or 0.0),
+            "o3": float(pollutants.get("o3") or 0.0),
+        },
+        humidity=float(live_row.get("humidity") or 0.0),
         preferred_interventions=preferred,
     )
-    if not result:
-        return jsonify({"error": "no AQI data for station"}), 404
 
     return (
         jsonify(result),

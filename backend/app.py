@@ -2,10 +2,15 @@ import os
 
 from flask import Flask, jsonify
 from flask_cors import CORS
+from dotenv import load_dotenv
 
 from config import get_config
 from database.connection import init_db
 from routes import register_routes
+from services.live_data_service import live_data_service
+
+
+load_dotenv()
 
 
 
@@ -44,6 +49,17 @@ def create_app():
 
 
 app = create_app()
+
+
+def _should_start_background_worker(flask_app: Flask) -> bool:
+    if not flask_app.config.get("DEBUG", False):
+        return True
+    # In debug mode, start only in the reloader child process.
+    return os.getenv("WERKZEUG_RUN_MAIN") == "true"
+
+
+if _should_start_background_worker(app):
+    live_data_service.start_background_fetch(app, interval_seconds=900)  # 15 minutes
 
 
 if __name__ == "__main__":
