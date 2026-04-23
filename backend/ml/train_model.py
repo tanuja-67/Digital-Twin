@@ -42,7 +42,7 @@ def _load_and_prepare(path: Path) -> tuple[pd.DataFrame, pd.Series]:
 def train_and_save_model() -> dict:
     x, y = _load_and_prepare(DATA_PATH)
     x_train, x_test, y_train, y_test = train_test_split(
-        x, y, test_size=0.2, random_state=42
+        x, y, test_size=0.4, random_state=42
     )
 
     linear = LinearRegression()
@@ -57,6 +57,10 @@ def train_and_save_model() -> dict:
 
     print(f"Linear Regression R2: {linear_r2:.4f}")
     print(f"Random Forest R2: {forest_r2:.4f}")
+    print("Train R2:", linear.score(x_train, y_train))
+    print("Test R2:", linear.score(x_test, y_test))
+    print("Train R2:", forest.score(x_train, y_train))
+    print("Test R2:", forest.score(x_test, y_test))
 
     if forest_r2 > linear_r2:
         best_name = "RandomForestRegressor"

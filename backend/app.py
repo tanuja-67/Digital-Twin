@@ -59,7 +59,7 @@ def _should_start_background_worker(flask_app: Flask) -> bool:
 
 
 if _should_start_background_worker(app):
-    live_data_service.start_background_fetch(app, interval_seconds=900)  # 15 minutes
+    live_data_service.start_background_fetch(app, interval_seconds=10800)  # 3 hours
 
 
 if __name__ == "__main__":

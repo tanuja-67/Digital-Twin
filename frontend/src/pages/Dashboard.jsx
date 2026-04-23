@@ -49,7 +49,7 @@ export function Analysis() {
 
   const loadLive = async (forceRefresh = false) => {
     try {
-      if (!areas.length) setLoading(true);
+      if (!areas.length || forceRefresh) setLoading(true);
       setError(null);
       const rows = await fetchLiveData(forceRefresh);
       setAreas(Array.isArray(rows) ? rows : []);
@@ -61,7 +61,7 @@ export function Analysis() {
   };
 
   useEffect(() => {
-    loadLive(true);
+    loadLive(false);
     const timer = setInterval(() => {
       loadLive(false);
     }, 60 * 1000);
