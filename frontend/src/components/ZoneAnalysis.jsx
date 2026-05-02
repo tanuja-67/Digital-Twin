@@ -3,9 +3,9 @@ import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis
 import { fetchZonePollutants } from "../services/api.js";
 
 function getZoneColor(aqi) {
-  if (aqi <= 100) return "#00e676";
-  if (aqi <= 200) return "#ffea00";
-  return "#ff5252";
+  if (aqi <= 100) return "#546b41";
+  if (aqi <= 200) return "#99ad7a";
+  return "#dcccac";
 }
 
 export function computeZoneAnalysis(zonesData) {
@@ -105,17 +105,11 @@ export function computeZoneAnalysis(zonesData) {
 function StatCard({ label, value, color }) {
   return (
     <div
-      style={{
-        background: "#10263f",
-        border: "1px solid #244d73",
-        borderRadius: 12,
-        padding: "12px",
-        display: "grid",
-        gap: 4,
-      }}
+      className="panel-card floating-lift"
+      style={{ padding: "12px", display: "grid", gap: 4 }}
     >
-      <div style={{ color: "#9ec3e4", fontSize: "0.78rem", textTransform: "uppercase" }}>{label}</div>
-      <div style={{ color: color || "#f4fbff", fontSize: "1.2rem", fontWeight: 800 }}>{value ?? "N/A"}</div>
+      <div style={{ color: "var(--ink-soft)", fontSize: "0.78rem", textTransform: "uppercase" }}>{label}</div>
+      <div style={{ color: color || "var(--ink)", fontSize: "1.2rem", fontWeight: 800 }}>{value ?? "N/A"}</div>
     </div>
   );
 }
@@ -152,10 +146,10 @@ export function ZoneAnalysis() {
 
   return (
     <section style={{ display: "grid", gap: "12px" }}>
-      <h3 style={{ margin: 0, fontSize: "1.05rem", color: "#f2f9ff" }}>Zone Analysis</h3>
+      <h3 style={{ margin: 0, fontSize: "1.05rem", color: "var(--ink)" }}>Zone Analysis</h3>
 
-      {loading && <div style={{ color: "#b7d0e8" }}>Loading zone analysis...</div>}
-      {error && <div style={{ color: "#ff9e9e" }}>{error}</div>}
+      {loading && <div style={{ color: "var(--ink-soft)" }}>Loading zone analysis...</div>}
+      {error && <div style={{ color: "#546B41" }}>{error}</div>}
 
       {!loading && !error && (
         <>
@@ -163,26 +157,27 @@ export function ZoneAnalysis() {
             <StatCard
               label="Average AQI"
               value={analysis.summary.averageAQI == null ? "N/A" : analysis.summary.averageAQI.toFixed(2)}
-              color="#ffe082"
+              color="#546b41"
             />
-            <StatCard label="Best Zone" value={analysis.summary.bestZone || "N/A"} color="#69f0ae" />
-            <StatCard label="Worst Zone" value={analysis.summary.worstZone || "N/A"} color="#ff8a80" />
+            <StatCard label="Best Zone" value={analysis.summary.bestZone || "N/A"} color="#99ad7a" />
+            <StatCard label="Worst Zone" value={analysis.summary.worstZone || "N/A"} color="#dcccac" />
           </div>
 
           <div
             style={{
-              background: "#10263f",
-              border: "1px solid #244d73",
-              borderRadius: 12,
+              background: "#DCCCAC",
+              border: "1px solid rgba(84,107,65,0.28)",
+              borderRadius: 18,
               padding: "12px",
               height: 320,
+              boxShadow: "var(--shadow)",
             }}
           >
             <ResponsiveContainer>
               <BarChart data={analysis.zones}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1f4568" />
-                <XAxis dataKey="zone" stroke="#b7d0e8" />
-                <YAxis stroke="#b7d0e8" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(84,107,65,0.18)" />
+                <XAxis dataKey="zone" stroke="var(--ink-soft)" />
+                <YAxis stroke="var(--ink-soft)" />
                 <Tooltip />
                 <Bar dataKey="aqi" radius={[8, 8, 0, 0]}>
                   {analysis.zones.map((row) => (

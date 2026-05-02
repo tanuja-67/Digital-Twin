@@ -24,12 +24,10 @@ function num(value) {
 function Card({ children, style }) {
   return (
     <div
+      className="theme-card floating-lift fade-up"
       style={{
-        background: "#10263f",
-        border: "1px solid #204a72",
         borderRadius: 14,
         padding: "16px",
-        boxShadow: "0 14px 28px rgba(2, 8, 20, 0.35)",
         ...style,
       }}
     >
@@ -109,30 +107,28 @@ export function InterventionPage() {
     <section style={{ display: "grid", gap: "14px" }}>
       <Card>
         <div style={{ display: "grid", gap: "10px" }}>
-          <h2 style={{ margin: 0, color: "#f5fbff", fontSize: "1.15rem" }}>
+          <h2 style={{ margin: 0, color: "#546B41", fontSize: "1.15rem" }}>
             Live Area AQI Simulation Lab
           </h2>
-          <p style={{ margin: 0, color: "#a9c6e3", fontSize: "0.9rem" }}>
+          <p style={{ margin: 0, color: "rgba(84,107,65,0.78)", fontSize: "0.9rem" }}>
             Select one live area, choose multiple interventions, and run simulation from latest live AQI.
           </p>
         </div>
       </Card>
 
-      {loadingStations && <div style={{ color: "#b9d2ea" }}>Loading live areas...</div>}
-      {error && <div style={{ color: "#ff9e9e" }}>{error}</div>}
+      {loadingStations && <div style={{ color: "rgba(84,107,65,0.78)" }}>Loading live areas...</div>}
+      {error && <div style={{ color: "#546B41" }}>{error}</div>}
 
       <Card>
         <div style={{ display: "grid", gap: "12px" }}>
           <div style={{ display: "grid", gap: "6px" }}>
-            <label style={{ color: "#d9ebff", fontWeight: 600 }}>Live Area</label>
+            <label style={{ color: "#546B41", fontWeight: 600 }}>Live Area</label>
             <select
               value={stationName}
               onChange={(e) => setStationName(e.target.value)}
               disabled={loadingStations || areas.length === 0}
+              className="theme-select"
               style={{
-                background: "#0b1d31",
-                color: "#f4faff",
-                border: "1px solid #2f5c84",
                 borderRadius: 10,
                 padding: "10px",
                 maxWidth: 320,
@@ -147,19 +143,20 @@ export function InterventionPage() {
           </div>
 
           <div style={{ display: "grid", gap: "8px" }}>
-            <div style={{ color: "#d9ebff", fontWeight: 600 }}>Interventions (multi-select)</div>
+            <div style={{ color: "#546B41", fontWeight: 600 }}>Interventions (multi-select)</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "8px" }}>
               {INTERVENTION_OPTIONS.map((item) => {
                 const active = selectedInterventions.includes(item.key);
                 return (
                   <label
+                    className="floating-lift"
                     key={item.key}
                     style={{
-                      border: active ? "1px solid #3ddc97" : "1px solid #2f5c84",
+                      border: active ? "1px solid #546B41" : "1px solid rgba(84,107,65,0.3)",
                       borderRadius: 12,
                       padding: "10px 12px",
-                      background: active ? "#123a34" : "#0b1d31",
-                      color: active ? "#eafff6" : "#d3e6f9",
+                      background: active ? "rgba(153,173,122,0.4)" : "rgba(255,248,236,0.88)",
+                      color: "#546B41",
                       display: "flex",
                       gap: "8px",
                       alignItems: "center",
@@ -181,12 +178,12 @@ export function InterventionPage() {
             type="button"
             onClick={onSimulate}
             disabled={loadingStations || loadingSimulate || !stationName}
+            className="theme-button floating-lift"
             style={{
-              border: "none",
               borderRadius: 12,
               padding: "12px 16px",
-              background: "linear-gradient(90deg, #2fd27f, #1eb3ff)",
-              color: "#062034",
+              background: "#546B41",
+              color: "#FFF8EC",
               fontWeight: 800,
               width: "fit-content",
               cursor: "pointer",
@@ -201,39 +198,39 @@ export function InterventionPage() {
         <>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px" }}>
             <Card>
-              <div style={{ color: "#a6c4e2", fontSize: "0.82rem" }}>Area</div>
-              <div style={{ color: "#f5fbff", fontSize: "1.1rem", fontWeight: 700 }}>{result.station_name}</div>
+              <div style={{ color: "rgba(84,107,65,0.75)", fontSize: "0.82rem" }}>Area</div>
+              <div style={{ color: "#546B41", fontSize: "1.1rem", fontWeight: 700 }}>{result.station_name}</div>
             </Card>
             <Card>
-              <div style={{ color: "#a6c4e2", fontSize: "0.82rem" }}>City / Zone</div>
-              <div style={{ color: "#f5fbff", fontSize: "1.1rem", fontWeight: 700 }}>{result.zone || "N/A"}</div>
+              <div style={{ color: "rgba(84,107,65,0.75)", fontSize: "0.82rem" }}>City / Zone</div>
+              <div style={{ color: "#546B41", fontSize: "1.1rem", fontWeight: 700 }}>{result.zone || "N/A"}</div>
             </Card>
             <Card>
-              <div style={{ color: "#a6c4e2", fontSize: "0.82rem" }}>Current AQI</div>
-              <div style={{ color: "#ffcf66", fontSize: "1.2rem", fontWeight: 800 }}>{num(result.current_aqi)}</div>
+              <div style={{ color: "rgba(84,107,65,0.75)", fontSize: "0.82rem" }}>Current AQI</div>
+              <div style={{ color: "#546B41", fontSize: "1.2rem", fontWeight: 800 }}>{num(result.current_aqi)}</div>
             </Card>
             <Card>
-              <div style={{ color: "#a6c4e2", fontSize: "0.82rem" }}>Predicted AQI</div>
-              <div style={{ color: "#56f0a5", fontSize: "1.2rem", fontWeight: 800 }}>{num(result.predicted_aqi)}</div>
+              <div style={{ color: "rgba(84,107,65,0.75)", fontSize: "0.82rem" }}>Predicted AQI</div>
+              <div style={{ color: "#99AD7A", fontSize: "1.2rem", fontWeight: 800 }}>{num(result.predicted_aqi)}</div>
             </Card>
             <Card>
-              <div style={{ color: "#a6c4e2", fontSize: "0.82rem" }}>Improvement</div>
-              <div style={{ color: "#49e48f", fontSize: "1.2rem", fontWeight: 800 }}>{num(result.improvement)}%</div>
+              <div style={{ color: "rgba(84,107,65,0.75)", fontSize: "0.82rem" }}>Improvement</div>
+              <div style={{ color: "#99AD7A", fontSize: "1.2rem", fontWeight: 800 }}>{num(result.improvement)}%</div>
             </Card>
           </div>
 
           <Card>
-            <h3 style={{ margin: "0 0 10px", color: "#f3f9ff", fontSize: "1rem" }}>Applied Interventions</h3>
+            <h3 style={{ margin: "0 0 10px", color: "#546B41", fontSize: "1rem" }}>Applied Interventions</h3>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
               {(result.applied_interventions || []).map((name) => (
                 <span
                   key={name}
                   style={{
-                    background: "#14395c",
-                    border: "1px solid #2d5f8a",
+                    background: "rgba(153,173,122,0.32)",
+                    border: "1px solid rgba(84,107,65,0.28)",
                     borderRadius: 999,
                     padding: "5px 10px",
-                    color: "#d9edff",
+                    color: "#546B41",
                     fontSize: "0.85rem",
                   }}
                 >
@@ -244,10 +241,10 @@ export function InterventionPage() {
           </Card>
 
           <Card>
-            <h3 style={{ margin: "0 0 10px", color: "#f3f9ff", fontSize: "1rem" }}>Smart Recommendations</h3>
+            <h3 style={{ margin: "0 0 10px", color: "#546B41", fontSize: "1rem" }}>Smart Recommendations</h3>
             <div style={{ display: "grid", gap: "8px" }}>
               {(result.recommended || []).length === 0 && (
-                <div style={{ color: "#b6c9df", fontSize: "0.9rem" }}>
+                <div style={{ color: "rgba(84,107,65,0.75)", fontSize: "0.9rem" }}>
                   No recommendations available.
                 </div>
               )}
@@ -257,20 +254,16 @@ export function InterventionPage() {
                   <div
                     key={`${rec.name}-${idx}`}
                     style={{
-                      border: "1px solid #2f5d84",
+                      border: "1px solid rgba(84,107,65,0.28)",
                       borderRadius: 10,
                       padding: "10px 12px",
-                      background: "#0f2942",
+                      background: "rgba(255,248,236,0.88)",
                       display: "grid",
                       gap: 4,
                     }}
                   >
-                    <div style={{ color: "#9ec5e8", fontSize: "0.8rem", fontWeight: 700 }}>{rank}</div>
-                    <div style={{ color: "#f5fbff", fontSize: "0.95rem", fontWeight: 700 }}>{rec.name}</div>
-                    <div style={{ color: "#9fd7ff", fontSize: "0.88rem" }}>
-                      AQI: {num(rec.predicted_aqi)}
-                      {rec.improvement != null ? ` | Improvement: ${num(rec.improvement)}%` : ""}
-                    </div>
+                    <div style={{ color: "rgba(84,107,65,0.75)", fontSize: "0.8rem", fontWeight: 700 }}>{rank}</div>
+                    <div style={{ color: "#546B41", fontSize: "0.95rem", fontWeight: 700 }}>{rec.name}</div>
                   </div>
                 );
               })}
@@ -279,15 +272,15 @@ export function InterventionPage() {
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "12px" }}>
             <Card>
-              <h3 style={{ margin: "0 0 12px", color: "#f3f9ff", fontSize: "1rem" }}>AQI Comparison</h3>
+              <h3 style={{ margin: "0 0 12px", color: "#546B41", fontSize: "1rem" }}>AQI Comparison</h3>
               <div style={{ width: "100%", height: 250 }}>
                 <ResponsiveContainer>
                   <BarChart data={aqiBarData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1f4261" />
-                    <XAxis dataKey="name" stroke="#b8d1e8" />
-                    <YAxis stroke="#b8d1e8" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(84,107,65,0.22)" />
+                    <XAxis dataKey="name" stroke="rgba(84,107,65,0.75)" />
+                    <YAxis stroke="rgba(84,107,65,0.75)" />
                     <Tooltip />
-                    <Bar dataKey="value" fill="#45c4ff" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="value" fill="#99AD7A" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -295,11 +288,11 @@ export function InterventionPage() {
           </div>
 
           <Card>
-            <h3 style={{ margin: "0 0 12px", color: "#f3f9ff", fontSize: "1rem" }}>Pollutant Impact Table</h3>
+            <h3 style={{ margin: "0 0 12px", color: "#546B41", fontSize: "1rem" }}>Pollutant Impact Table</h3>
             <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", color: "#d8ebff" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", color: "#546B41" }}>
                 <thead>
-                  <tr style={{ background: "#0d2036" }}>
+                  <tr style={{ background: "rgba(153,173,122,0.3)" }}>
                     <th style={thStyle}>Pollutant</th>
                     <th style={thStyle}>Before</th>
                     <th style={thStyle}>After</th>
@@ -308,11 +301,11 @@ export function InterventionPage() {
                 </thead>
                 <tbody>
                   {(result.pollutant_changes || []).map((row) => (
-                    <tr key={row.pollutant} style={{ borderTop: "1px solid #244c6f" }}>
+                    <tr key={row.pollutant} style={{ borderTop: "1px solid rgba(84,107,65,0.24)" }}>
                       <td style={tdStyle}>{row.pollutant}</td>
                       <td style={tdStyle}>{num(row.before)}</td>
                       <td style={tdStyle}>{num(row.after)}</td>
-                      <td style={{ ...tdStyle, color: "#49e48f", fontWeight: 700 }}>{num(row.reduction)}</td>
+                      <td style={{ ...tdStyle, color: "#99AD7A", fontWeight: 700 }}>{num(row.reduction)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -330,9 +323,9 @@ export function InterventionPage() {
 const thStyle = {
   textAlign: "left",
   padding: "10px",
-  borderBottom: "1px solid #244c6f",
+  borderBottom: "1px solid rgba(84,107,65,0.24)",
   fontSize: "0.82rem",
-  color: "#a8c7e4",
+  color: "rgba(84,107,65,0.75)",
 };
 
 const tdStyle = {

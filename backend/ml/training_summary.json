@@ -1,0 +1,19 @@
+{
+  "summary": {
+    "linear_r2": 0.933583,
+    "random_forest_r2": 0.988602,
+    "best_model": "RandomForestRegressor",
+    "best_r2": 0.988602,
+    "saved_to": "C:\\MiniProject\\backend\\ml\\aqi_model.pkl"
+  },
+  "model_name": "RandomForestRegressor",
+  "feature_importances": {
+    "pm25": 0.24380919014835473,
+    "pm10": 0.7354794793972311,
+    "no2": 0.001474341267461593,
+    "so2": 0.00047564217194755165,
+    "co": 0.017291829033357964,
+    "o3": 0.0004125098693013164,
+    "humidity": 0.0010570081123459285
+  }
+}

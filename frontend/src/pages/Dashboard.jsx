@@ -16,10 +16,10 @@ import { fetchLiveData } from "../services/api.js";
 
 function getAqiStatus(aqi) {
   const value = Number(aqi || 0);
-  if (value <= 50) return { label: "Good", color: "#43a047" };
-  if (value <= 100) return { label: "Moderate", color: "#f9a825" };
-  if (value <= 200) return { label: "Poor", color: "#ef6c00" };
-  return { label: "Severe", color: "#c62828" };
+  if (value <= 50) return { label: "Good", color: "green" };
+  if (value <= 100) return { label: "Moderate", color: "orange" };
+  if (value <= 200) return { label: "Poor", color: "red" };
+  return { label: "Severe", color: "#546B41" };
 }
 
 function safeNum(value) {
@@ -100,6 +100,7 @@ export function Analysis() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
       <section
+        className="fade-up stagger-1"
         style={{
           display: "flex",
           flexWrap: "wrap",
@@ -110,10 +111,8 @@ export function Analysis() {
         <button
           type="button"
           onClick={() => loadLive(true)}
+          className="theme-button floating-lift"
           style={{
-            background: "#0b1d31",
-            color: "#f4faff",
-            border: "1px solid #2f5c84",
             borderRadius: 10,
             padding: "8px 10px",
             fontWeight: 700,
@@ -122,15 +121,13 @@ export function Analysis() {
         >
           Refresh all areas
         </button>
-        <span style={{ color: "#b7d0e8", fontSize: "0.85rem" }}>
+        <span style={{ color: "var(--ink-soft)", fontSize: "0.85rem" }}>
           Auto refresh: 1 min | Backend cycle: 3 hours
         </span>
         <Link
           to="/station-trend"
+          className="theme-button floating-lift"
           style={{
-            background: "#0b1d31",
-            color: "#f4faff",
-            border: "1px solid #2f5c84",
             borderRadius: 10,
             padding: "8px 10px",
             minWidth: 220,
@@ -143,10 +140,10 @@ export function Analysis() {
         </Link>
       </section>
 
-      {loading && <p style={{ color: "#9ec5e8", margin: 0 }}>Loading live AQI data...</p>}
+      {loading && <p style={{ color: "var(--ink-soft)", margin: 0 }}>Loading live AQI data...</p>}
 
       {error && (
-        <p style={{ color: "#b91c1c", margin: 0 }}>
+        <p style={{ color: "#546B41", margin: 0 }}>
           {error} - is the Flask server running on port 5000?
         </p>
       )}
@@ -154,6 +151,7 @@ export function Analysis() {
       {!!areas.length && (
         <>
           <section
+            className="fade-up stagger-2"
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))",
@@ -164,74 +162,70 @@ export function Analysis() {
               label="Tracked Areas"
               value={String(areas.length)}
               sub="Predefined WAQI locations"
-              color="#5cc8ff"
+              color="#101110"
             />
             <MetricCard
               label="Average AQI"
               value={safeNum(stats.averageAqi).toFixed(2)}
               sub={getAqiStatus(stats.averageAqi).label}
-              color={getAqiStatus(stats.averageAqi).color}
+              color="#0e0e0e"
             />
             <MetricCard
               label="Highest AQI"
               value={safeNum(stats.highestArea?.aqi).toFixed(2)}
               sub={stats.highestArea?.area || "N/A"}
-              color="#ef5350"
+              color="#0e0e0e"
             />
             <MetricCard
               label="Lowest AQI"
               value={safeNum(stats.lowestArea?.aqi).toFixed(2)}
               sub={stats.lowestArea?.area || "N/A"}
-              color="#43a047"
+              color="#0f0f0e"
             />
             <MetricCard
               label="Severe Areas"
               value={String(stats.severeCount)}
               sub="AQI > 200"
-              color="#c62828"
+              color="#131312"
             />
             <MetricCard
               label="Last Updated"
               value={formatTs(areas[0]?.timestamp)}
               sub="Latest backend snapshot"
-              color="#c6d9f0"
+              color="#111110"
             />
           </section>
 
           <section
+            className="surface-card fade-up stagger-3 floating-lift"
             style={{
-              background: "#10263f",
-              border: "1px solid #244d73",
-              borderRadius: 12,
               padding: "12px",
               height: 360,
             }}
           >
-            <h3 style={{ margin: "0 0 12px", fontSize: "1.05rem", color: "#f2f9ff" }}>Actual vs Predicted AQI by Area</h3>
+            <h3 style={{ margin: "0 0 12px", fontSize: "1.05rem", color: "var(--ink)" }}>Actual vs Predicted AQI by Area</h3>
             <ResponsiveContainer>
               <BarChart data={compareBars}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1f4568" />
-                <XAxis dataKey="area" stroke="#b7d0e8" interval={0} angle={-35} textAnchor="end" height={85} />
-                <YAxis stroke="#b7d0e8" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(84,107,65,0.2)" />
+                <XAxis dataKey="area" stroke="rgba(84,107,65,0.75)" interval={0} angle={-35} textAnchor="end" height={85} />
+                <YAxis stroke="rgba(84,107,65,0.75)" />
                 <Tooltip />
-                <Bar dataKey="actual" name="Actual AQI" fill="#ffb300" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="predicted" name="Predicted AQI" fill="#4fc3f7" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="actual" name="Actual AQI" fill="#546B41" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="predicted" name="Predicted AQI" fill="#99AD7A" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </section>
 
           <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: "12px" }}>
             <div
+              className="surface-card floating-lift"
               style={{
-                background: "#10263f",
-                border: "1px solid #244d73",
-                borderRadius: 12,
                 padding: "12px",
                 maxHeight: 420,
                 overflowY: "auto",
               }}
             >
-              <h3 style={{ margin: "0 0 12px", fontSize: "1.05rem", color: "#f2f9ff" }}>Area Status Board</h3>
+              <h3 style={{ margin: "0 0 12px", fontSize: "1.05rem", color: "var(--ink)" }}>Area Status Board</h3>
               <div style={{ display: "grid", gap: "8px" }}>
                 {areas.map((row) => {
                   const status = getAqiStatus(row.aqi);
@@ -243,14 +237,14 @@ export function Analysis() {
                         gridTemplateColumns: "1.4fr 0.7fr 0.7fr",
                         gap: "8px",
                         alignItems: "center",
-                        border: "1px solid #244d73",
+                        border: "1px solid rgba(84,107,65,0.26)",
                         borderRadius: 10,
                         padding: "8px 10px",
-                        background: "#0e2237",
+                        background: "#FFF8EC",
                       }}
                     >
-                      <div style={{ color: "#d7e8fa", fontWeight: 700, fontSize: "0.88rem" }}>{row.area}</div>
-                      <div style={{ color: "#ffd166", fontWeight: 700, fontSize: "0.88rem" }}>AQI {safeNum(row.aqi).toFixed(1)}</div>
+                      <div style={{ color: "#546B41", fontWeight: 700, fontSize: "0.88rem" }}>{row.area}</div>
+                      <div style={{ color: "#494f40", fontWeight: 700, fontSize: "0.88rem" }}>AQI {safeNum(row.aqi).toFixed(1)}</div>
                       <div style={{ color: status.color, fontWeight: 700, fontSize: "0.85rem" }}>{status.label}</div>
                     </div>
                   );
@@ -259,15 +253,13 @@ export function Analysis() {
             </div>
 
             <div
+              className="surface-card floating-lift"
               style={{
-                background: "#10263f",
-                border: "1px solid #244d73",
-                borderRadius: 12,
                 padding: "12px",
                 height: 420,
               }}
             >
-              <h3 style={{ margin: "0 0 12px", fontSize: "1.05rem", color: "#f2f9ff" }}>Live AQI Map (14 Areas)</h3>
+              <h3 style={{ margin: "0 0 12px", fontSize: "1.05rem", color: "var(--ink)" }}>Live AQI Map (14 Areas)</h3>
               <div style={{ height: 360, borderRadius: 10, overflow: "hidden" }}>
                 <MapContainer center={center} zoom={10} style={{ height: "100%", width: "100%" }}>
                   <TileLayer
@@ -310,18 +302,16 @@ export function Analysis() {
 function MetricCard({ label, value, sub, color }) {
   return (
     <article
+      className="panel-card floating-lift"
       style={{
-        background: "#10263f",
-        border: "1px solid #244d73",
-        borderRadius: 12,
         padding: "12px",
         display: "grid",
         gap: "4px",
       }}
     >
-      <div style={{ color: "#8fb2d2", fontSize: "0.8rem", textTransform: "uppercase" }}>{label}</div>
-      <div style={{ color: color || "#f2f9ff", fontSize: "1.1rem", fontWeight: 800 }}>{value}</div>
-      <div style={{ color: "#b7d0e8", fontSize: "0.84rem" }}>{sub}</div>
+      <div style={{ color: "rgba(84,107,65,0.75)", fontSize: "0.8rem", textTransform: "uppercase" }}>{label}</div>
+      <div style={{ color: color || "#546B41", fontSize: "1.1rem", fontWeight: 800 }}>{value}</div>
+      <div style={{ color: "rgba(84,107,65,0.7)", fontSize: "0.84rem" }}>{sub}</div>
     </article>
   );
 }

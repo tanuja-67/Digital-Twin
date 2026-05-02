@@ -3,14 +3,10 @@ export function ReadingCard({ reading }) {
   const station = reading.station;
   return (
     <article
-      style={{
-        border: "1px solid #e2e8f0",
-        borderRadius: 8,
-        padding: "1rem",
-        background: "#fff",
-      }}
+      className="theme-card floating-lift fade-up"
+      style={{ padding: "1rem" }}
     >
-      <h3 style={{ margin: "0 0 0.5rem", fontSize: "0.95rem" }}>
+      <h3 style={{ margin: "0 0 0.5rem", fontSize: "0.95rem", color: "var(--ink)" }}>
         {station ? station.name : `Station #${reading.station_id}`}
       </h3>
       <dl
@@ -22,13 +18,13 @@ export function ReadingCard({ reading }) {
           gridTemplateColumns: "auto 1fr",
         }}
       >
-        <dt style={{ color: "#64748b" }}>PM2.5</dt>
+        <dt style={{ color: "var(--ink-soft)" }}>PM2.5</dt>
         <dd style={{ margin: 0 }}>{reading.pm25}</dd>
-        <dt style={{ color: "#64748b" }}>PM10</dt>
+        <dt style={{ color: "var(--ink-soft)" }}>PM10</dt>
         <dd style={{ margin: 0 }}>{reading.pm10}</dd>
-        <dt style={{ color: "#64748b" }}>AQI</dt>
+        <dt style={{ color: "var(--ink-soft)" }}>AQI</dt>
         <dd style={{ margin: 0 }}>{reading.final_aqi}</dd>
-        <dt style={{ color: "#64748b" }}>Date</dt>
+        <dt style={{ color: "var(--ink-soft)" }}>Date</dt>
         <dd style={{ margin: 0 }}>{reading.date}</dd>
       </dl>
     </article>
